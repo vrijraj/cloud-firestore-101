@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <input type="text" id="name" placeholder="Enter Name">
+    <button id="addBtn">Add Data</button>
+    <div style="margin-top: 10px;">
+        <table border="1">
+            <thead>
+                <tr>
+                    <td>Doc Id</td>
+                    <td>Name</td>
+                    <td>Delete</td>
+                </tr>
+            </thead>
+            <tbody id="result">
+            </tbody>
+        </table>
+    </div>
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+        // TODO: Add SDKs for Firebase products that you want to use
+        // https://firebase.google.com/docs/web/setup#available-libraries
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "xxxxxxxxxxx",
+            authDomain: "xxxxxxxxxxx.firebaseapp.com",
+            projectId: "xxxxxxxxxxx",
+            storageBucket: "xxxxxxxxxxx.appspot.com",
+            messagingSenderId: "xxxxxxxxxxx",
+            appId: "1:xxxxxxxxxxx:web:xxxxxxxxxxx"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore()
+        let allUser = []
+
+        // Add Data
+        const addData = async () => {
+            const name = document.getElementById('name').value
+            try {
+                const ref = await addDoc(collection(db, 'users'), { name: name })
+                console.log(ref);
+                alert('Data Added')
+                readData()
+            } catch (error) {
+                console.log('error', e)
+            }
+        }
+
+        // Delete Data
+        const deleteData = async (docid) => {
+            if (confirm('Are you sure?')) {
+                try {
+                    await deleteDoc(doc(db, "users", docid));
+                    alert('Data Removed')
+                    readData()
+                } catch (error) {
+                    console.log('error', error)
+                }
+
+            }
+        }
+
+        // Read Data
+        const readData = async () => {
+            document.getElementById('result').innerHTML = ''
+            const querySnapshot = await getDocs(collection(db, 'users'))
+            allUser = querySnapshot.docs.map(doc => {
+                return { ...doc.data(), ...{ docid: doc.id } }
+            })
+
+            allUser.forEach(user => {
+                const row = document.createElement('tr');
+
+                // Create table data for document ID and name
+                const idCell = document.createElement('td');
+                idCell.textContent = user.docid;
+
+                const nameCell = document.createElement('td');
+                nameCell.textContent = user.name;
+
+                // Create delete button
+                const actionCell = document.createElement('td');
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.setAttribute('id', user.docid);
+
+                // Attach event listener directly to the button
+                deleteButton.addEventListener('click', () => deleteData(user.docid));
+
+                actionCell.appendChild(deleteButton);
+
+                // Append cells to row
+                row.appendChild(idCell);
+                row.appendChild(nameCell);
+                row.appendChild(actionCell);
+
+                // Append row to the result table
+                document.getElementById('result').appendChild(row);
+            })
+        }
+
+        document.getElementById('addBtn').addEventListener('click', addData)
+        readData()
+    </script>
+
+</body>
+
+</html>
